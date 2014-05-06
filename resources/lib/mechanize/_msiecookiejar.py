@@ -12,8 +12,13 @@ COPYING.txt included with the distribution).
 # XXX names and comments are not great here
 
 import os, re, time, struct, logging
-if os.name == "nt":
-    import _winreg
+winreg_avail = False
+try:
+    if os.name == "nt":
+        import _winreg
+        winreg_avail = True
+except ImportError:
+    pass
 
 from _clientcookie import FileCookieJar, CookieJar, Cookie, \
      MISSING_FILENAME_TEXT, LoadError
@@ -24,9 +29,12 @@ debug = logging.getLogger("mechanize").debug
 def regload(path, leaf):
     key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, path, 0,
                           _winreg.KEY_ALL_ACCESS)
-    try:
-        value = _winreg.QueryValueEx(key, leaf)[0]
-    except WindowsError:
+    if winreg_avail:
+        try:
+            value = _winreg.QueryValueEx(key, leaf)[0]
+        except WindowsError:
+            value = None
+    else:
         value = None
     return value
 
